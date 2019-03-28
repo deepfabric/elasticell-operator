@@ -1,0 +1,11 @@
+apiVersion: v1
+description: A Helm chart for Cell Cluster
+name: cell-cluster
+version: 0.1.0
+home: https://github.com/deepfabric/elasticell-operator
+sources:
+  - https://github.com/deepfabric/elasticell-operator
+keywords:
+  - raft
+  - kvstore
+  - redis

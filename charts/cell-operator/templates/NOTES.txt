@@ -1,0 +1,7 @@
+1. Make sure cell-operator components are running
+   kubectl get pods --namespace {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+2. Install CRD
+   kubectl apply -f https://raw.githubusercontent.com/deepfabric/elasticell-operator/master/manifests/crd.yaml
+   kubectl get customresourcedefinitions
+3. Modify cell-cluster/values.yaml and create a Cell cluster by installing cell-cluster charts
+   helm install cell-cluster

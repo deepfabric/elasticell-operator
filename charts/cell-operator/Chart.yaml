@@ -1,0 +1,11 @@
+apiVersion: v1
+description: cell-operator Helm chart for Kubernetes
+name: cell-operator
+version: 0.1.0
+home: https://github.com/deepfabric/elasticell-operator
+sources:
+  - https://github.com/deepfabric/elasticell-operator
+keywords:
+  - operator
+  - redis
+  - raft

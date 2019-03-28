@@ -1,0 +1,159 @@
+# Default values for cell-cluster.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+rbac:
+  create: true
+
+# clusterName is the Cell cluster name, it is required and should be unique
+# if multiple clusters are deployed in the same namespace.
+clusterName: demo
+
+# schedulerName must be same with charts/cell-operator/values#scheduler.schedulerName
+schedulerName: cell-scheduler
+
+# timezone is the default system timzone for Cell
+timezone: UTC
+
+# default reclaim policy of a PV
+pvReclaimPolicy: Retain
+
+# services is the service list to expose, default is ClusterIP
+# can be ClusterIP | NodePort | LoadBalancer
+services:
+  - name: pd
+    type: ClusterIP
+
+discovery:
+  image: deepfabric/elasticell-operator:latest
+  imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 250m
+      memory: 150Mi
+    requests:
+      cpu: 80m
+      memory: 50Mi
+
+pd:
+  replicas: 3
+  image: deepfabric/pd:latest
+  logLevel: info
+  # storageClassName is a StorageClass provides a way for administrators to describe the "classes" of storage they offer.
+  # different classes might map to quality-of-service levels, or to backup policies,
+  # or to arbitrary policies determined by the cluster administrators.
+  # refer to https://kubernetes.io/docs/concepts/storage/storage-classes
+  storageClassName: local-storage
+
+  # Image pull policy.
+  imagePullPolicy: IfNotPresent
+
+  # maxStoreDownTime is how long a store will be considered `down` when disconnected
+  # if a store is considered `down`, the regions will be migrated to other stores
+  maxStoreDownTime: 1h
+  # maxReplicas is the number of replicas for each region
+  maxReplicas: 3
+  resources:
+    limits: {}
+    #   cpu: 8000m
+    #   memory: 8Gi
+    requests:
+      # cpu: 4000m
+      # memory: 4Gi
+      storage: 1Gi
+  # nodeSelector is used for scheduling pod,
+  # if nodeSelectorRequired is true, all the following labels must be matched
+  nodeSelector: {}
+    # kind: pd
+    # # zone is comma separated availability zone list
+    # # region is comma separated region list
+  # Tolerations are applied to pods, and allow pods to schedule onto nodes with matching taints.
+  # refer to https://kubernetes.io/docs/concepts/configuration/taint-and-toleration
+  tolerations: []
+  # - key: node-role
+  #   operator: Equal
+  #   value: proxy
+  #   effect: "NoSchedule"
+
+store:
+  replicas: 3
+  image: deepfabric/store:latest
+  logLevel: info
+  # storageClassName is a StorageClass provides a way for administrators to describe the "classes" of storage they offer.
+  # different classes might map to quality-of-service levels, or to backup policies,
+  # or to arbitrary policies determined by the cluster administrators.
+  # refer to https://kubernetes.io/docs/concepts/storage/storage-classes
+  storageClassName: local-storage
+
+  # Image pull policy.
+  imagePullPolicy: IfNotPresent
+
+  # syncLog is a bool value to enable or disable syc-log for raftstore, default is true
+  # enable this can prevent data loss when power failure
+  syncLog: true
+  resources:
+    limits: {}
+    #   cpu: 16000m
+    #   memory: 32Gi
+    #   storage: 300Gi
+    requests:
+      # cpu: 12000m
+      # memory: 24Gi
+      storage: 10Gi
+  nodeSelector: {}
+    # kind: store
+  tolerations: []
+  # - key: node-role
+  #   operator: Equal
+  #   value: proxy
+  #   effect: "NoSchedule"
+
+  # block-cache used to cache uncompressed blocks, big block-cache can speed up read.
+  # in normal cases should tune to 30%-50% store.resources.limits.memory
+  # defaultcfBlockCacheSize: "1GB"
+
+  # in normal cases should tune to 10%-30% store.resources.limits.memory
+  # writecfBlockCacheSize: "256MB"
+
+  # size of thread pool for high-priority/normal-priority/low-priority operations
+  # readpoolStorageConcurrency: 4
+
+  # Notice: if store.resources.limits.cpu > 8, default thread pool size for coprocessors
+  # will be set to store.resources.limits.cpu * 0.8.
+  # readpoolCoprocessorConcurrency: 8
+
+  # scheduler's worker pool size, should increase it in heavy write cases,
+  # also should less than total cpu cores.
+  # storageSchedulerWorkerPoolSize: 4
+
+proxy:
+  replicas: 2
+  image: deepfabric/proxy:latest
+  # Image pull policy.
+  imagePullPolicy: IfNotPresent
+  logLevel: info
+  resources:
+    limits: {}
+    #   cpu: 16000m
+    #   memory: 16Gi
+    requests: {}
+    #   cpu: 12000m
+    #   memory: 12Gi
+  nodeSelector: {}
+    # kind: proxy
+  tolerations: []
+  # - key: node-role
+  #   operator: Equal
+  #   value: proxy
+  #   effect: "NoSchedule"
+  service:
+    type: NodePort
+    exposeStatus: true
+    # annotations:
+      # cloud.google.com/load-balancer-type: Internal
+
+# to do: need a rediscli for test
+
+metaInstance: "{{ $labels.instance }}"
+metaType: "{{ $labels.type }}"
+metaValue: "{{ $value }}"

@@ -1,0 +1,70 @@
+apiVersion: deepfabric.com/v1alpha1
+kind: CellCluster
+metadata:
+  name: {{ .Values.clusterName }}
+  labels:
+    app.kubernetes.io/name: {{ template "chart.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: cell-cluster
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+"  "_" }}
+spec:
+  pvReclaimPolicy: {{ .Values.pvReclaimPolicy }}
+  timezone: {{ .Values.timezone | default "UTC" }}
+  services:
+{{ toYaml .Values.services | indent 4 }}
+  schedulerName: {{ .Values.schedulerName | default "default-scheduler" }}
+  pd:
+    replicas: {{ .Values.pd.replicas }}
+    image: {{ .Values.pd.image }}
+    imagePullPolicy: {{ .Values.pd.imagePullPolicy | default "IfNotPresent" }}
+  {{- if .Values.pd.storageClassName }}
+    storageClassName: {{ .Values.pd.storageClassName }}
+  {{- end }}
+  {{- if .Values.pd.resources }}
+{{ toYaml .Values.pd.resources | indent 4 }}
+  {{- end }}
+  {{- if .Values.pd.nodeSelector }}
+    nodeSelector:
+{{ toYaml .Values.pd.nodeSelector | indent 6 }}
+  {{- end }}
+    nodeSelectorRequired: {{ .Values.nodeSelectorRequired | default true }}
+  {{- if .Values.pd.tolerations }}
+    tolerations:
+{{ toYaml .Values.pd.tolerations | indent 4 }}
+  {{- end }}
+  store:
+    replicas: {{ .Values.store.replicas }}
+    image: {{ .Values.store.image }}
+    imagePullPolicy: {{ .Values.store.imagePullPolicy | default "IfNotPresent" }}
+  {{- if .Values.store.storageClassName }}
+    storageClassName: {{ .Values.store.storageClassName }}
+  {{- end }}
+  {{- if .Values.store.resources }}
+{{ toYaml .Values.store.resources | indent 4 }}
+  {{- end }}
+  {{- if .Values.store.nodeSelector }}
+    nodeSelector:
+{{ toYaml .Values.store.nodeSelector | indent 6 }}
+  {{- end }}
+    nodeSelectorRequired: {{ .Values.nodeSelectorRequired | default true }}
+  {{- if .Values.store.tolerations }}
+    tolerations:
+{{ toYaml .Values.store.tolerations | indent 4 }}
+  {{- end }}
+  proxy:
+    replicas: {{ .Values.proxy.replicas }}
+    image: {{ .Values.proxy.image }}
+    imagePullPolicy: {{ .Values.proxy.imagePullPolicy | default "IfNotPresent" }}
+  {{- if .Values.proxy.resources }}
+{{ toYaml .Values.proxy.resources | indent 4 }}
+  {{- end }}
+  {{- if .Values.proxy.nodeSelector }}
+    nodeSelector:
+{{ toYaml .Values.proxy.nodeSelector | indent 6 }}
+  {{- end }}
+    nodeSelectorRequired: {{ .Values.nodeSelectorRequired | default true }}
+  {{- if .Values.proxy.tolerations }}
+    tolerations:
+{{ toYaml .Values.proxy.tolerations | indent 4 }}
+  {{- end }}

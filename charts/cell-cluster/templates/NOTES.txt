@@ -1,0 +1,9 @@
+Cluster Startup
+1. Watch cell-cluster up and running
+     watch kubectl get pods --namespace {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }} -o wide
+2. List services in the cell-cluster
+     kubectl get services --namespace {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Cluster access
+* Access cell-cluster using the redis client
+    kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Values.clusterName }}-cell 4000:4000 &
