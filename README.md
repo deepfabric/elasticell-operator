@@ -13,7 +13,7 @@ Cell Operator manages [elasticell](https://github.com/deepfabric/elasticell) clu
 
 - __Kubernetes package manager support__
 
-    By embracing Kubernetes package manager [Helm](https://helm.sh), users can easily deploy TiDB clusters with only one command.
+    By embracing Kubernetes package manager [Helm](https://helm.sh), users can easily deploy Elasticell clusters with only one command.
 
 
 

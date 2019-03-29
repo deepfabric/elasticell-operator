@@ -66,17 +66,17 @@ func (sf *storeFailover) Recover(_ *v1alpha1.CellCluster) {
 	// Do nothing now
 }
 
-type fakeTiKVFailover struct{}
+type fakeStoreFailover struct{}
 
 // NewFakeStoreFailover returns a fake Failover
 func NewFakeStoreFailover() Failover {
-	return &fakeTiKVFailover{}
+	return &fakeStoreFailover{}
 }
 
-func (ftf *fakeTiKVFailover) Failover(_ *v1alpha1.CellCluster) error {
+func (ftf *fakeStoreFailover) Failover(_ *v1alpha1.CellCluster) error {
 	return nil
 }
 
-func (ftf *fakeTiKVFailover) Recover(_ *v1alpha1.CellCluster) {
+func (ftf *fakeStoreFailover) Recover(_ *v1alpha1.CellCluster) {
 	return
 }

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This script is used to start tikv containers in kubernetes cluster
+# This script is used to start store containers in kubernetes cluster
 
 # Use DownwardAPIVolumeFiles to store informations of the cluster:
 # https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/#the-downward-api

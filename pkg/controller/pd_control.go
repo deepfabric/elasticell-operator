@@ -92,16 +92,15 @@ type PDClient interface {
 	DeleteMember(name string) error
 	// DeleteMemberByID deletes a PD member from cluster
 	DeleteMemberByID(memberID uint64) error
-	// GetStores lists all TiKV stores from cluster
+	// GetStores lists all stores from cluster
 	GetStores() (*StoresInfo, error)
 	// GetTombStoneStores lists all tombstone stores from cluster
 	GetTombStoneStores() (*StoresInfo, error)
-	// GetStore gets a TiKV store for a specific store id from cluster
+	// GetStore gets a store for a specific store id from cluster
 	GetStore(storeID uint64) (*pdapi.StoreInfo, error)
 	// storeLabelsEqualNodeLabels compares store labels with node labels
-	// for historic reasons, PD stores TiKV labels as []*StoreLabel which is a key-value pair slice
 	SetStoreLabels(storeID uint64, labels map[string]string) (bool, error)
-	// DeleteStore deletes a TiKV store from cluster
+	// DeleteStore deletes a store from cluster
 	DeleteStore(storeID uint64) error
 
 	// BeginEvictLeader initiates leader eviction for a storeID.
@@ -569,7 +568,7 @@ func (pc *FakePDClient) DeleteMember(name string) error {
 	return nil
 }
 
-// SetStoreLabels sets TiKV labels
+// SetStoreLabels sets Store labels
 func (pc *FakePDClient) SetStoreLabels(storeID uint64, labels map[string]string) (bool, error) {
 	if reaction, ok := pc.reactions[SetStoreLabelsActionType]; ok {
 		action := &Action{ID: storeID, Labels: labels}

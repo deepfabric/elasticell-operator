@@ -1,4 +1,4 @@
-// Copyright 2018 PingCAP, Inc.
+// Copyright 2018 DeepFabric, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	// tidbVersion and tidbVersion will be set during make
-	tidbVersion = "None"
+	// elasticellVersion and elasticellVersion will be set during make
+	elasticellVersion = "None"
 
 	gitVersion   = "v0.0.0-master+$Format:%h$"
 	gitCommit    = "$Format:%H$" // sha1 from git, output of $(git rev-parse HEAD)
@@ -33,13 +33,13 @@ var (
 
 // PrintVersionInfo show version info to Stdout
 func PrintVersionInfo() {
-	fmt.Printf("TiDB Operator Version: %#v\n", Get())
+	fmt.Printf("Elasticell Operator Version: %#v\n", Get())
 }
 
 // LogVersionInfo print version info at startup
 func LogVersionInfo() {
-	glog.Infof("Welcome to TiDB Operator.")
-	glog.Infof("TiDB Operator Version: %#v", Get())
+	glog.Infof("Welcome to Elasticell Operator.")
+	glog.Infof("Elasticell Operator Version: %#v", Get())
 }
 
 // Get returns the overall codebase version. It's for detecting
@@ -47,13 +47,13 @@ func LogVersionInfo() {
 func Get() Info {
 	// These variables typically come from -ldflags settings and in
 	return Info{
-		TiDBVersion:  tidbVersion,
-		GitVersion:   gitVersion,
-		GitCommit:    gitCommit,
-		GitTreeState: gitTreeState,
-		BuildDate:    buildDate,
-		GoVersion:    runtime.Version(),
-		Compiler:     runtime.Compiler,
-		Platform:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+		ElasticellVersion: elasticellVersion,
+		GitVersion:        gitVersion,
+		GitCommit:         gitCommit,
+		GitTreeState:      gitTreeState,
+		BuildDate:         buildDate,
+		GoVersion:         runtime.Version(),
+		Compiler:          runtime.Compiler,
+		Platform:          fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 	}
 }
