@@ -28,6 +28,7 @@ fi
 # the general form of variable PEER_SERVICE_NAME is: "<clusterName>-pd"
 cluster_name=`echo ${SERVICE_NAME} | sed 's/-pd//'`
 domain="${HOSTNAME}.${SERVICE_NAME}.${NAMESPACE}.svc"
+pd_domain="${SERVICE_NAME}.${NAMESPACE}.svc"
 discovery_url="${cluster_name}-discovery.${NAMESPACE}.svc:10261"
 encoded_domain_url=`echo ${domain}:2379 | base64 | tr "\n" " " | sed "s/ //g"`
 
@@ -44,12 +45,12 @@ while true; do
         exit 1
     fi
 
-    if nslookup ${domain} 2>/dev/null
+    if nslookup ${pd_domain} 2>/dev/null
     then
-        echo "nslookup domain ${domain}.svc success"
+        echo "nslookup domain ${pd_domain}.svc success"
         break
     else
-        echo "nslookup domain ${domain} failed" >&2
+        echo "nslookup domain ${pd_domain} failed" >&2
     fi
 done
 
