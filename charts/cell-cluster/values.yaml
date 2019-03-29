@@ -25,7 +25,7 @@ services:
     type: ClusterIP
 
 discovery:
-  image: deepfabric/elasticell-operator:latest
+  image: harbor.infinivision.cn/deepfabric/elasticell-operator:latest
   imagePullPolicy: IfNotPresent
   resources:
     limits:
@@ -37,7 +37,7 @@ discovery:
 
 pd:
   replicas: 3
-  image: deepfabric/pd:latest
+  image: harbor.infinivision.cn/deepfabric/pd:latest
   logLevel: info
   # storageClassName is a StorageClass provides a way for administrators to describe the "classes" of storage they offer.
   # different classes might map to quality-of-service levels, or to backup policies,
@@ -77,7 +77,7 @@ pd:
 
 store:
   replicas: 3
-  image: deepfabric/store:latest
+  image: harbor.infinivision.cn/deepfabric/cell:latest
   logLevel: info
   # storageClassName is a StorageClass provides a way for administrators to describe the "classes" of storage they offer.
   # different classes might map to quality-of-service levels, or to backup policies,
@@ -128,7 +128,7 @@ store:
 
 proxy:
   replicas: 2
-  image: deepfabric/proxy:latest
+  image: harbor.infinivision.cn/deepfabric/redis-proxy:latest
   # Image pull policy.
   imagePullPolicy: IfNotPresent
   logLevel: info

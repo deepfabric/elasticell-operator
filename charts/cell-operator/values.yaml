@@ -9,7 +9,7 @@ rbac:
   create: true
 
 # operatorImage is Elasticell Operator image
-operatorImage: deepfabric/elasticell-operator:latest
+operatorImage: harbor.infinivision.cn/deepfabric/elasticell-operator:latest
 imagePullPolicy: IfNotPresent
 
 defaultStorageClassName: local-storage
@@ -45,4 +45,4 @@ scheduler:
       cpu: 80m
       memory: 50Mi
   # this hyperkube verison must be the same as your kubernetes cluster version
-  # kubeSchedulerImage: gcr.io/google-containers/hyperkube:v1.12.1
+  kubeSchedulerImage: gcr.io/google-containers/hyperkube:v1.11.6
