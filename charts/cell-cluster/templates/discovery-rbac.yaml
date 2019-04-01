@@ -13,7 +13,7 @@ rules:
 - apiGroups: ["deepfabric.com"]
   resources: ["cellclusters"]
   resourceNames: [{{ .Values.clusterName | quote }}]
-  verbs: ["get"]
+  verbs: ["get","update"]
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
