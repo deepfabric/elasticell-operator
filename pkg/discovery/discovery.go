@@ -149,11 +149,11 @@ func (cd *cellDiscovery) Discover(advertisePeerURL string) (string, error) {
 	}
 	glog.Infof("advertisePeerURL is: %s", advertisePeerURL)
 	strArr := strings.Split(advertisePeerURL, ".")
-	if len(strArr) != 4 {
+	if len(strArr) != 5 {
 		return "", fmt.Errorf("advertisePeerURL format is wrong: %s", advertisePeerURL)
 	}
 
-	podName, pdServiceName, ns := strArr[0], strArr[1], strArr[2]
+	podIP, podName, pdServiceName, ns := strArr[0], strArr[1], strArr[2], strArr[3]
 	ccName := strings.TrimSuffix(pdServiceName, "-pd")
 	podNamespace := os.Getenv("MY_POD_NAMESPACE")
 	if ns != podNamespace {
@@ -172,14 +172,14 @@ func (cd *cellDiscovery) Discover(advertisePeerURL string) (string, error) {
 			peers:           map[string]string{},
 		}
 	}
-	cd.currentCluster.peers[podName] = advertisePeerURL
+	cd.currentCluster.peers[podName] = podIP
 	initClusterParam := ""
 	if cc.Status.PdPeerURL != "" {
 		return cc.Status.PdPeerURL, nil
 	}
 	if len(cd.currentCluster.peers) == int(replicas) {
-		for podName, peerURL := range cd.currentCluster.peers {
-			initClusterParam += fmt.Sprintf("%s=http://%s,", podName, peerURL)
+		for podName, ip := range cd.currentCluster.peers {
+			initClusterParam += fmt.Sprintf("%s=http://%s:2380,", podName, ip)
 		}
 		l := len(initClusterParam)
 		initClusterParam = initClusterParam[:l-1]
