@@ -180,7 +180,7 @@ func (stmm *storeMemberManager) getNewSetForCellCluster(cc *v1alpha1.CellCluster
 		annMount,
 		{Name: v1alpha1.StoreMemberType.String(), MountPath: "/var/lib/store"},
 		{Name: "config", ReadOnly: true, MountPath: "/etc/store"},
-		{Name: "startup-script", ReadOnly: true, MountPath: "/usr/local/bin"},
+		{Name: "startup-script", ReadOnly: true, MountPath: "/usr/local/bin/startup"},
 	}
 	vols := []corev1.Volume{
 		annVolume,
@@ -247,7 +247,7 @@ func (stmm *storeMemberManager) getNewSetForCellCluster(cc *v1alpha1.CellCluster
 						{
 							Name:            v1alpha1.StoreMemberType.String(),
 							Image:           cc.Spec.Store.Image,
-							Command:         []string{"/bin/sh", "/usr/local/bin/store_start_script.sh"},
+							Command:         []string{"/bin/sh", "/usr/local/bin/startup/store_start_script.sh"},
 							ImagePullPolicy: cc.Spec.Store.ImagePullPolicy,
 							Ports: []corev1.ContainerPort{
 								{

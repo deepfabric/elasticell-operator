@@ -383,7 +383,7 @@ func (pdmm *pdMemberManager) getNewPDSetForCellCluster(cc *v1alpha1.CellCluster)
 	volMounts := []corev1.VolumeMount{
 		annMount,
 		{Name: "config", ReadOnly: true, MountPath: "/etc/pd"},
-		{Name: "startup-script", ReadOnly: true, MountPath: "/usr/local/bin"},
+		{Name: "startup-script", ReadOnly: true, MountPath: "/usr/local/bin/startup"},
 		{Name: v1alpha1.PDMemberType.String(), MountPath: "/var/lib/pd"},
 	}
 	vols := []corev1.Volume{
@@ -458,7 +458,7 @@ func (pdmm *pdMemberManager) getNewPDSetForCellCluster(cc *v1alpha1.CellCluster)
 						{
 							Name:            v1alpha1.PDMemberType.String(),
 							Image:           cc.Spec.PD.Image,
-							Command:         []string{"/bin/sh", "/usr/local/bin/pd_start_script.sh"},
+							Command:         []string{"/bin/sh", "/usr/local/bin/startup/pd_start_script.sh"},
 							ImagePullPolicy: cc.Spec.PD.ImagePullPolicy,
 							Ports: []corev1.ContainerPort{
 								{

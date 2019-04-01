@@ -127,7 +127,7 @@ func (pxmm *proxyMemberManager) getNewProxySetForCellCluster(cc *v1alpha1.CellCl
 	annMount, annVolume := annotationsMountVolume()
 	volMounts := []corev1.VolumeMount{
 		annMount,
-		{Name: "startup-script", ReadOnly: true, MountPath: "/usr/local/bin"},
+		{Name: "startup-script", ReadOnly: true, MountPath: "/usr/local/bin/startup"},
 	}
 	vols := []corev1.Volume{
 		annVolume,
@@ -157,7 +157,7 @@ func (pxmm *proxyMemberManager) getNewProxySetForCellCluster(cc *v1alpha1.CellCl
 	containers = append(containers, corev1.Container{
 		Name:            v1alpha1.ProxyMemberType.String(),
 		Image:           cc.Spec.Proxy.Image,
-		Command:         []string{"/bin/sh", "/usr/local/bin/proxy_start_script.sh"},
+		Command:         []string{"/bin/sh", "/usr/local/bin/startup/proxy_start_script.sh"},
 		ImagePullPolicy: cc.Spec.Proxy.ImagePullPolicy,
 		Ports: []corev1.ContainerPort{
 			{
