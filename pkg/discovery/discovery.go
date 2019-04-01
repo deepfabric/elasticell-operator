@@ -179,7 +179,7 @@ func (cd *cellDiscovery) Discover(advertisePeerURL string) (string, error) {
 	}
 	if len(cd.currentCluster.peers) == int(replicas) {
 		for podName, peerURL := range cd.currentCluster.peers {
-			initClusterParam += fmt.Sprintf("%s=%s,", podName, peerURL)
+			initClusterParam += fmt.Sprintf("%s=http://%s,", podName, peerURL)
 		}
 		l := len(initClusterParam)
 		initClusterParam = initClusterParam[:l-1]
