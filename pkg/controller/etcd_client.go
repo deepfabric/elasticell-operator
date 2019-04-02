@@ -103,12 +103,16 @@ func getHealth(endpoint string) (*HealthInfo, error) {
 	memberHealth := MemberHealth{}
 	url := ""
 	for _, member := range resp.Members {
-		url = member.ClientURLs[0]
-		health, _ := getKV(url)
 		memberHealth.Name = member.Name
 		memberHealth.MemberID = member.ID
 		memberHealth.ClientUrls = member.ClientURLs
-		memberHealth.Health = health
+		if len(member.ClientURLs) > 0 {
+			url = member.ClientURLs[0]
+			health, _ := getKV(url)
+			memberHealth.Health = health
+		} else {
+			memberHealth.Health = false
+		}
 		membersHealth = append(membersHealth, memberHealth)
 	}
 	return &HealthInfo{Healths: membersHealth}, nil

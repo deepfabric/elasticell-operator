@@ -22,21 +22,11 @@ spec:
   {{- end }}
   ports:
   - name: redis-client
-    port: 4000
-    targetPort: 4000
+    port: 6379
+    targetPort: 6379
     protocol: TCP
-    {{- if .Values.proxy.service.mysqlNodePort }}
-    nodePort: {{ .Values.proxy.service.mysqlNodePort }}
-    {{- end }}
-  {{- if .Values.proxy.service.exposeStatus }}
-  - name: status
-    port: 10080
-    targetPort: 10080
-    protocol: TCP
-    {{- if .Values.proxy.service.statusNodePort }}
-    nodePort: {{ .Values.proxy.service.statusNodePort }}
-    {{- end }}
-  {{- end }}
+
+
   selector:
     app.kubernetes.io/name: {{ template "chart.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

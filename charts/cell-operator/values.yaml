@@ -10,7 +10,7 @@ rbac:
 
 # operatorImage is Elasticell Operator image
 operatorImage: harbor.infinivision.cn/deepfabric/elasticell-operator:latest
-imagePullPolicy: IfNotPresent
+imagePullPolicy: Always
 
 defaultStorageClassName: local-storage
 
@@ -19,7 +19,7 @@ controllerManager:
   # With rbac.create=true, this service account will be created
   # Also see rbac.create and clusterScoped
   serviceAccount: cell-controller-manager
-  logLevel: 2
+  logLevel: 6
   replicas: 1
   resources:
     limits:

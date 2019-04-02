@@ -24,19 +24,19 @@ then
 fi
 
 # the general form of variable PEER_SERVICE_NAME is: "<clusterName>-pd-peer"
-cluster_name=${CLUSTER_NAME}
-discovery_url="${cluster_name}-discovery.${NAMESPACE}.svc:10261"
-
-ARGS="
---cfg=/etc/proxy/proxy-config.json
-"
+discovery_url="${CLUSTER_NAME}-discovery.${NAMESPACE}.svc:10261"
 
 until result=$(wget -qO- -T 3 http://${discovery_url}/proxy-config 2>/dev/null); do
     echo "waiting for discovery service returns start args ..."
     sleep $((RANDOM % 5))
 done
-echo ${resutl} > /etc/proxy/proxy-config.json
+echo ${result} > /var/lib/redis-proxy/proxy-config.json
+
+ARGS="\
+-log-level=debug \
+--cfg=/var/lib/redis-proxy/proxy-config.json \
+"
 
 echo "start cell-proxy ..."
 cat /etc/proxy/proxy-config.json
-exec /redis-proxy ${ARGS}
+exec /usr/local/bin/redis-proxy ${ARGS}

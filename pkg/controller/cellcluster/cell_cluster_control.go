@@ -18,6 +18,7 @@ import (
 	"github.com/deepfabric/elasticell-operator/pkg/controller"
 	"github.com/deepfabric/elasticell-operator/pkg/manager"
 	"github.com/deepfabric/elasticell-operator/pkg/manager/member"
+	"github.com/golang/glog"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	errorutils "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/record"
@@ -86,11 +87,13 @@ func (ccc *defaultCellClusterControl) UpdateCellCluster(cc *v1alpha1.CellCluster
 func (ccc *defaultCellClusterControl) updateCellCluster(cc *v1alpha1.CellCluster) error {
 	// syncing all PVs managed by operator's reclaim policy to Retain
 	if err := ccc.reclaimPolicyManager.Sync(cc); err != nil {
+		glog.Errorf("reclaimPolicyManager failed")
 		return err
 	}
 
 	// cleaning all orphan pods(pd or store which don't have a related PVC) managed by operator
 	if _, err := ccc.orphanPodsCleaner.Clean(cc); err != nil {
+		glog.Errorf("orphanPodsCleaner failed")
 		return err
 	}
 
@@ -106,6 +109,7 @@ func (ccc *defaultCellClusterControl) updateCellCluster(cc *v1alpha1.CellCluster
 	//   - scale out/in the pd cluster
 	//   - failover the pd cluster
 	if err := ccc.pdMemberManager.Sync(cc); err != nil {
+		glog.Errorf("pdMemberManager failed")
 		return err
 	}
 
@@ -119,6 +123,7 @@ func (ccc *defaultCellClusterControl) updateCellCluster(cc *v1alpha1.CellCluster
 	//   - scale out/in the store cluster
 	//   - failover the store cluster
 	if err := ccc.storeMemberManager.Sync(cc); err != nil {
+		glog.Errorf("storeMemberManager failed")
 		return err
 	}
 
@@ -131,6 +136,7 @@ func (ccc *defaultCellClusterControl) updateCellCluster(cc *v1alpha1.CellCluster
 	//   - scale out/in the proxy cluster
 	//   - failover the proxy cluster
 	if err := ccc.proxyMemberManager.Sync(cc); err != nil {
+		glog.Errorf("proxyMemberManager failed")
 		return err
 	}
 
@@ -138,5 +144,11 @@ func (ccc *defaultCellClusterControl) updateCellCluster(cc *v1alpha1.CellCluster
 	//   - label.StoreIDLabelKey
 	//   - label.MemberIDLabelKey
 	//   - label.NamespaceLabelKey
-	return ccc.metaManager.Sync(cc)
+
+	if err := ccc.metaManager.Sync(cc); err != nil {
+		glog.Errorf("metaManager failed")
+		return err
+	}
+
+	return nil
 }

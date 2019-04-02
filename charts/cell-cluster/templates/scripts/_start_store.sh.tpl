@@ -25,14 +25,22 @@ then
 	tail -f /dev/null
 fi
 
+discovery_url="${CLUSTER_NAME}-discovery.${NAMESPACE}.svc:10261"
+
+until result=$(wget -qO- -T 3 http://${discovery_url}/store-config 2>/dev/null); do
+    echo "waiting for discovery service returns start args ..."
+    sleep $((RANDOM % 5))
+done
+
+hostip=`hostname -i | tr "\n" " " | sed "s/ //g"`
 ARGS="--data=/var/lib/cell/data \
---log-file=/var/lib/cell/cell.log \
---addr=${HOSTNAME}:10800 \
+-log-level=debug \
+--addr=${hostip}:10800 \
 --addr-cli=:6370 \
 --zone=zone-1 --rack=rack-1 \
 --interval-heartbeat-store=5 \
 --interval-heartbeat-cell=2 \
---pd=${CLUSTER_NAME}-pd:2379
+--pd=${result}\
 "
 
 echo "starting cell ..."

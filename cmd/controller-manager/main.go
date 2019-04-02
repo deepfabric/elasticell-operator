@@ -113,14 +113,14 @@ func main() {
 		},
 	}
 
-	tcController := cellcluster.NewController(kubeCli, cli, informerFactory, kubeInformerFactory)
+	ccController := cellcluster.NewController(kubeCli, cli, informerFactory, kubeInformerFactory)
 	stop := make(chan struct{})
 	defer close(stop)
 	go informerFactory.Start(stop)
 	go kubeInformerFactory.Start(stop)
 
 	onStarted := func(stopCh <-chan struct{}) {
-		tcController.Run(workers, stopCh)
+		ccController.Run(workers, stopCh)
 	}
 	onStopped := func() {
 		glog.Fatalf("leader election lost")

@@ -16,7 +16,6 @@ package member
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -122,12 +121,16 @@ func (stmm *storeMemberManager) syncStatefulSetForCellCluster(cc *v1alpha1.CellC
 	}
 
 	if err := stmm.syncCellClusterStatus(cc, oldSet); err != nil {
+		glog.Errorf("syncCellClusterStatus failed")
 		return err
 	}
 
-	if _, err := stmm.setStoreLabelsForStore(cc); err != nil {
-		return err
-	}
+	/*
+		if _, err := stmm.setStoreLabelsForStore(cc); err != nil {
+			glog.Errorf("setStoreLabelsForStore failed")
+			return err
+		}
+	*/
 
 	if !templateEqual(newSet.Spec.Template, oldSet.Spec.Template) || cc.Status.Store.Phase == v1alpha1.UpgradePhase {
 		if err := stmm.storeUpgrader.Upgrade(cc, oldSet, newSet); err != nil {
@@ -165,6 +168,7 @@ func (stmm *storeMemberManager) syncStatefulSetForCellCluster(cc *v1alpha1.CellC
 			return err
 		}
 		_, err = stmm.setControl.UpdateStatefulSet(cc, &set)
+		glog.Errorf("UpdateStatefulSet failed")
 		return err
 	}
 
@@ -328,6 +332,7 @@ func (stmm *storeMemberManager) syncCellClusterStatus(cc *v1alpha1.CellCluster, 
 	cc.Status.Store.StatefulSet = &set.Status
 	upgrading, err := stmm.storeStatefulSetIsUpgradingFn(stmm.podLister, stmm.pdControl, set, cc)
 	if err != nil {
+		glog.Errorf("storeStatefulSetIsUpgradingFn failed")
 		return err
 	}
 	if upgrading && cc.Status.PD.Phase != v1alpha1.UpgradePhase {
@@ -344,6 +349,7 @@ func (stmm *storeMemberManager) syncCellClusterStatus(cc *v1alpha1.CellCluster, 
 	// This only returns Up/Down/Offline stores
 	storeInfo, err := pdCli.GetStores()
 	if err != nil {
+		glog.Errorf("storeMemberManager GetStores failed")
 		cc.Status.Store.Synced = false
 		return err
 	}
@@ -356,7 +362,7 @@ func (stmm *storeMemberManager) syncCellClusterStatus(cc *v1alpha1.CellCluster, 
 		// avoid LastHeartbeatTime be overwrite by zero time when pd lost LastHeartbeatTime
 		if status.LastHeartbeatTime.IsZero() {
 			if oldStatus, ok := previousStores[status.ID]; ok {
-				glog.V(4).Infof("the pod:%s's store LastHeartbeatTime is zero,so will keep in %v", status.PodName, oldStatus.LastHeartbeatTime)
+				glog.V(4).Infof("the pod:%s's store LastHeartbeatTime is zero,so will keep in %v", status.IP, oldStatus.LastHeartbeatTime)
 				status.LastHeartbeatTime = oldStatus.LastHeartbeatTime
 			}
 		}
@@ -398,20 +404,26 @@ func (stmm *storeMemberManager) getKVStore(store *pdapi.StoreInfo) *v1alpha1.KVS
 	}
 	storeID := fmt.Sprintf("%d", store.Meta.ID)
 	ip := strings.Split(store.Meta.Address, ":")[0]
-	// to do the same podname?
-	podName := strings.Split(ip, ".")[0]
+	// podName := strings.Split(ip, ".")[0]
 
 	heartBeatTime := time.Time{}
 	if store.Status.LastHeartbeatTS > 0 {
 		heartBeatTime = time.Unix(store.Status.LastHeartbeatTS, 0)
 	}
 
+	state := v1alpha1.StoreStateUp
+	if store.Meta.State == 1 {
+		state = v1alpha1.StoreStateDown
+	} else if store.Meta.State == 2 {
+		state = v1alpha1.StoreStateTombstone
+	}
+
 	return &v1alpha1.KVStore{
-		ID:                storeID,
-		PodName:           podName,
+		ID: storeID,
+		// PodName:           podName,
 		IP:                ip,
 		LeaderCount:       int32(store.Status.LeaderCount),
-		State:             strconv.Itoa(int(store.Meta.State)),
+		State:             state,
 		LastHeartbeatTime: metav1.Time{Time: heartBeatTime},
 	}
 }
@@ -428,7 +440,9 @@ func (stmm *storeMemberManager) setStoreLabelsForStore(cc *v1alpha1.CellCluster)
 	}
 
 	for _, store := range storesInfo.Stores {
+		glog.Infof("store: %v", store)
 		status := stmm.getKVStore(store)
+		glog.Infof("status: %v", status)
 		if status == nil {
 			continue
 		}

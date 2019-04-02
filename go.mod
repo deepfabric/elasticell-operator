@@ -37,9 +37,10 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
-	github.com/onsi/ginkgo v1.6.0
+	github.com/onsi/ginkgo v1.6.0 // indirect
 	github.com/onsi/gomega v1.4.1
 	github.com/pingcap/check v0.0.0-20171206051426-1c287c953996 // indirect
+	github.com/pingcap/errors v0.11.1
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v0.8.0 // indirect
@@ -59,9 +60,9 @@ require (
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1 // indirect
+	golang.org/x/net v0.0.0-20190311183353-d8887717615a // indirect
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2 // indirect
-	golang.org/x/tools v0.0.0-20190328030505-8f05a32dce9f // indirect
 	google.golang.org/genproto v0.0.0-20180731170733-daca94659cb5 // indirect
 	google.golang.org/grpc v1.12.0 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect

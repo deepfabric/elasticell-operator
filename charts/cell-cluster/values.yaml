@@ -26,7 +26,7 @@ services:
 
 discovery:
   image: harbor.infinivision.cn/deepfabric/elasticell-operator:latest
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always
   resources:
     limits:
       cpu: 250m
@@ -46,7 +46,7 @@ pd:
   storageClassName: local-storage
 
   # Image pull policy.
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always
 
   # maxStoreDownTime is how long a store will be considered `down` when disconnected
   # if a store is considered `down`, the regions will be migrated to other stores
@@ -86,7 +86,7 @@ store:
   storageClassName: local-storage
 
   # Image pull policy.
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always
 
   # syncLog is a bool value to enable or disable syc-log for raftstore, default is true
   # enable this can prevent data loss when power failure
@@ -130,7 +130,7 @@ proxy:
   replicas: 2
   image: harbor.infinivision.cn/deepfabric/redis-proxy:latest
   # Image pull policy.
-  imagePullPolicy: IfNotPresent
+  imagePullPolicy: Always
   logLevel: info
   resources:
     limits: {}

@@ -34,7 +34,8 @@ func StartServer(cli versioned.Interface, port int) {
 	svr := &server{discovery.NewCellDiscovery(cli)}
 
 	ws := new(restful.WebService)
-	ws.Route(ws.GET("/new/{advertise-peer-url}").To(svr.newPdHandler))
+	ws.Route(ws.GET("/new/{advertise-peer-url}/{pod-ip}").To(svr.newPdHandler))
+	ws.Route(ws.GET("/store-config").To(svr.newStoreHandler))
 	ws.Route(ws.GET("/proxy-config").To(svr.newProxyHandler))
 	restful.Add(ws)
 
@@ -43,27 +44,53 @@ func StartServer(cli versioned.Interface, port int) {
 }
 
 func (svr *server) newPdHandler(req *restful.Request, resp *restful.Response) {
-	encodedAdvertisePeerUrl := req.PathParameter("advertise-peer-url")
-	data, err := base64.StdEncoding.DecodeString(encodedAdvertisePeerUrl)
+	encodedadvertisePeerURL := req.PathParameter("advertise-peer-url")
+	encodePodIP := req.PathParameter("pod-ip")
+	data, err := base64.StdEncoding.DecodeString(encodedadvertisePeerURL)
 	if err != nil {
-		glog.Errorf("failed to decode advertise-peer-url: %s", encodedAdvertisePeerUrl)
+		glog.Errorf("failed to decode advertise-peer-url: %s", encodedadvertisePeerURL)
 		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {
 			glog.Errorf("failed to writeError: %v", err)
 		}
 		return
 	}
-	advertisePeerUrl := string(data)
+	advertisePeerURL := string(data)
 
-	result, err := svr.discovery.Discover(advertisePeerUrl)
+	data, err = base64.StdEncoding.DecodeString(encodePodIP)
 	if err != nil {
-		glog.Errorf("failed to discover: %s, %v", advertisePeerUrl, err)
+		glog.Errorf("failed to decode podIP: %s", encodePodIP)
+		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {
+			glog.Errorf("failed to writeError: %v", err)
+		}
+		return
+	}
+	podIP := string(data)
+
+	result, err := svr.discovery.Discover(advertisePeerURL, podIP)
+	if err != nil {
+		glog.Errorf("failed to discover: %s, %v", advertisePeerURL, err)
 		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {
 			glog.Errorf("failed to writeError: %v", err)
 		}
 		return
 	}
 
-	glog.Infof("generated pd args for %s: %s", advertisePeerUrl, result)
+	glog.Infof("generated pd args for %s: %s", advertisePeerURL, result)
+	if _, err := io.WriteString(resp, result); err != nil {
+		glog.Errorf("failed to writeString: %s, %v", result, err)
+	}
+}
+
+func (svr *server) newStoreHandler(req *restful.Request, resp *restful.Response) {
+	result, err := svr.discovery.GetStoreConfig()
+	if err != nil {
+		glog.Errorf("failed to get store config: %v", err)
+		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {
+			glog.Errorf("failed to writeError: %v", err)
+		}
+		return
+	}
+	glog.Infof("generated store config json: %s", result)
 	if _, err := io.WriteString(resp, result); err != nil {
 		glog.Errorf("failed to writeString: %s, %v", result, err)
 	}

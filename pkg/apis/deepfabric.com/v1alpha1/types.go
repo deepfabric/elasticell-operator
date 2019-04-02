@@ -91,13 +91,15 @@ type CellClusterSpec struct {
 	Services        []Service                            `json:"services,omitempty"`
 	PVReclaimPolicy corev1.PersistentVolumeReclaimPolicy `json:"pvReclaimPolicy,omitempty"`
 	Timezone        string                               `json:"timezone,omitempty"`
+
+	PdPeerURL string `json:"peerURL,omitempty"`
+	PdPeerRPC string `json:"peerRPC,omitempty"`
 }
 
 // CellClusterStatus represents the current status of a cell cluster.
 type CellClusterStatus struct {
 	ClusterID string      `json:"clusterID,omitempty"`
 	PD        PDStatus    `json:"pd,omitempty"`
-	PdPeerURL string      `json:"peerurl,omitempty"`
 	Store     StoreStatus `json:"store,omitempty"`
 	Proxy     ProxyStatus `json:"proxy,omitempty"`
 }

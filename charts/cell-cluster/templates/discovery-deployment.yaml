@@ -46,5 +46,5 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: CLUSTER_NAME
-            value: {{ .Release.Name }}
+            value: {{ .Values.clusterName }}
 

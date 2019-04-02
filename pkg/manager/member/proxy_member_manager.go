@@ -145,6 +145,14 @@ func (pxmm *proxyMemberManager) getNewProxySetForCellCluster(cc *v1alpha1.CellCl
 
 	envs := []corev1.EnvVar{
 		{
+			Name: "NAMESPACE",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
+		{
 			Name:  "CLUSTER_NAME",
 			Value: cc.GetName(),
 		},

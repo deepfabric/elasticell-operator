@@ -25,6 +25,7 @@ import (
 	mm "github.com/deepfabric/elasticell-operator/pkg/manager/member"
 	"github.com/deepfabric/elasticell-operator/pkg/manager/meta"
 	"github.com/golang/glog"
+	perrors "github.com/pingcap/errors"
 	apps "k8s.io/api/apps/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -209,7 +210,9 @@ func (ccc *Controller) Run(workers int, stopCh <-chan struct{}) {
 func (ccc *Controller) worker() {
 	for ccc.processNextWorkItem() {
 		// revive:disable:empty-block
+		glog.V(2).Infof("process one item")
 	}
+	glog.V(2).Infof("worker over")
 }
 
 // processNextWorkItem dequeues items, processes them, and marks them done. It enforces that the syncHandler is never
@@ -220,15 +223,13 @@ func (ccc *Controller) processNextWorkItem() bool {
 		return false
 	}
 	defer ccc.queue.Done(key)
+	glog.V(2).Infof("do sync")
 	if err := ccc.sync(key.(string)); err != nil {
-		/*
-			// to do
-			if perrors.Find(err, controller.IsRequeueError) != nil {
-				glog.Infof("CellCluster: %v, still need sync: %v, requeuing", key.(string), err)
-			} else {
-				utilruntime.HandleError(fmt.Errorf("CellCluster: %v, sync failed %v, requeuing", key.(string), err))
-			}
-		*/
+		if perrors.Find(err, controller.IsRequeueError) != nil {
+			glog.Infof("CellCluster: %v, still need sync: %v, requeuing", key.(string), err)
+		} else {
+			utilruntime.HandleError(fmt.Errorf("CellCluster: %v, sync failed %v, requeuing", key.(string), err))
+		}
 		ccc.queue.AddRateLimited(key)
 	} else {
 		ccc.queue.Forget(key)
