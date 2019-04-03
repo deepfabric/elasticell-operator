@@ -28,11 +28,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var (
+const (
+	notifyPort  = ":9998"
 	proxyCfgStr = `
 	{
-		"addr": ":6379",
-		"addrNotify": "0.0.0.0:9998",
+		"addr": "0.0.0.0:6379",
+		"addrNotify": ":9998",
 		"watcherHeartbeatSec": 5,
 		"pdAddrs": ["127.0.0.1:20801"],
 		"maxRetries": 100,
@@ -110,9 +111,9 @@ var (
 
 // CellDiscovery helps new PD member to discover all other members in cluster bootstrap phase.
 type CellDiscovery interface {
-	Discover(string, string) (string, error)
+	Discover(string) (string, error)
 	GetStoreConfig() (string, error)
-	GetProxyConfig() (string, error)
+	GetProxyConfig(string) (string, error)
 }
 
 type cellDiscovery struct {
@@ -141,7 +142,7 @@ func NewCellDiscovery(cli versioned.Interface) CellDiscovery {
 	return cd
 }
 
-func (cd *cellDiscovery) Discover(advertisePeerURL string, podIP string) (string, error) {
+func (cd *cellDiscovery) Discover(advertisePeerURL string) (string, error) {
 	cd.lock.Lock()
 	defer cd.lock.Unlock()
 
@@ -150,12 +151,12 @@ func (cd *cellDiscovery) Discover(advertisePeerURL string, podIP string) (string
 	}
 	glog.Infof("advertisePeerURL is: %s", advertisePeerURL)
 	strArr := strings.Split(advertisePeerURL, ".")
-	if len(strArr) != 3 {
+	if len(strArr) != 4 {
 		return "", fmt.Errorf("advertisePeerURL format is wrong: %s", advertisePeerURL)
 	}
 
 	podName, pdServiceName, ns := strArr[0], strArr[1], strArr[2]
-	ccName := strings.TrimSuffix(pdServiceName, "-pd")
+	ccName := strings.TrimSuffix(pdServiceName, "-pd-peer")
 	podNamespace := os.Getenv("MY_POD_NAMESPACE")
 	if ns != podNamespace {
 		return "", fmt.Errorf("the peer's namespace: %s is not equal to discovery namespace: %s", ns, podNamespace)
@@ -173,7 +174,7 @@ func (cd *cellDiscovery) Discover(advertisePeerURL string, podIP string) (string
 			peers:           map[string]string{},
 		}
 	}
-	cd.currentCluster.peers[podName] = podIP
+	cd.currentCluster.peers[podName] = advertisePeerURL
 	initClusterParam := ""
 
 	if cc.Spec.PdPeerURL != "" {
@@ -182,9 +183,9 @@ func (cd *cellDiscovery) Discover(advertisePeerURL string, podIP string) (string
 	}
 	if len(cd.currentCluster.peers) == int(replicas) {
 		pdPeerRPC := ""
-		for podName, ip := range cd.currentCluster.peers {
-			initClusterParam += fmt.Sprintf("%s=http://%s:2380,", podName, ip)
-			pdPeerRPC += fmt.Sprintf("%s:20800,", ip)
+		for podName, peerURL := range cd.currentCluster.peers {
+			initClusterParam += fmt.Sprintf("%s=http://%s:2380,", podName, peerURL)
+			pdPeerRPC += fmt.Sprintf("%s:20800,", peerURL)
 		}
 		initClusterParam = initClusterParam[:len(initClusterParam)-1]
 		pdPeerRPC = pdPeerRPC[:len(pdPeerRPC)-1]
@@ -229,7 +230,7 @@ func (cd *cellDiscovery) GetStoreConfig() (string, error) {
 
 }
 
-func (cd *cellDiscovery) GetProxyConfig() (string, error) {
+func (cd *cellDiscovery) GetProxyConfig(podIP string) (string, error) {
 	cd.lock.Lock()
 	defer cd.lock.Unlock()
 
@@ -255,6 +256,7 @@ func (cd *cellDiscovery) GetProxyConfig() (string, error) {
 	}
 
 	proxyCfg.(map[string]interface{})["pdAddrs"] = pdPeerRPCs
+	proxyCfg.(map[string]interface{})["addrNotify"] = podIP + notifyPort
 
 	byteProxyCfg, err := json.Marshal(proxyCfg)
 	return string(byteProxyCfg), err

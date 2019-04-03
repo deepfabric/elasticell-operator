@@ -73,11 +73,10 @@ func (pdmm *pdMemberManager) Sync(cc *v1alpha1.CellCluster) error {
 	}
 
 	// Sync PD Headless Service
-	/*
-		if err := pdmm.syncPDHeadlessServiceForCellCluster(cc); err != nil {
-			return err
-		}
-	*/
+	if err := pdmm.syncPDHeadlessServiceForCellCluster(cc); err != nil {
+		return err
+	}
+
 	// Sync PD StatefulSet
 	return pdmm.syncPDStatefulSetForCellCluster(cc)
 }
@@ -340,6 +339,12 @@ func (pdmm *pdMemberManager) getNewPDHeadlessServiceForCellCluster(cc *v1alpha1.
 					TargetPort: intstr.FromInt(2380),
 					Protocol:   corev1.ProtocolTCP,
 				},
+				{
+					Name:       "rpc",
+					Port:       20800,
+					TargetPort: intstr.FromInt(20800),
+					Protocol:   corev1.ProtocolTCP,
+				},
 			},
 			Selector: pdLabel,
 		},
@@ -484,8 +489,8 @@ func (pdmm *pdMemberManager) getNewPDSetForCellCluster(cc *v1alpha1.CellCluster)
 									},
 								},
 								{
-									Name:  "SERVICE_NAME",
-									Value: controller.PDMemberName(ccName),
+									Name:  "PEER_SERVICE_NAME",
+									Value: controller.PDPeerMemberName(ccName),
 								},
 								/*
 									{
@@ -523,7 +528,7 @@ func (pdmm *pdMemberManager) getNewPDSetForCellCluster(cc *v1alpha1.CellCluster)
 					},
 				},
 			},
-			// ServiceName:         controller.PDPeerMemberName(ccName),
+			ServiceName:         controller.PDPeerMemberName(ccName),
 			PodManagementPolicy: apps.ParallelPodManagement,
 			UpdateStrategy: apps.StatefulSetUpdateStrategy{
 				Type: apps.RollingUpdateStatefulSetStrategyType,

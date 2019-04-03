@@ -34,9 +34,9 @@ func StartServer(cli versioned.Interface, port int) {
 	svr := &server{discovery.NewCellDiscovery(cli)}
 
 	ws := new(restful.WebService)
-	ws.Route(ws.GET("/new/{advertise-peer-url}/{pod-ip}").To(svr.newPdHandler))
+	ws.Route(ws.GET("/new/{advertise-peer-url}").To(svr.newPdHandler))
 	ws.Route(ws.GET("/store-config").To(svr.newStoreHandler))
-	ws.Route(ws.GET("/proxy-config").To(svr.newProxyHandler))
+	ws.Route(ws.GET("/proxy-config/{pod-ip}").To(svr.newProxyHandler))
 	restful.Add(ws)
 
 	glog.Infof("starting Cell Discovery server, listening on 0.0.0.0:%d", port)
@@ -45,7 +45,6 @@ func StartServer(cli versioned.Interface, port int) {
 
 func (svr *server) newPdHandler(req *restful.Request, resp *restful.Response) {
 	encodedadvertisePeerURL := req.PathParameter("advertise-peer-url")
-	encodePodIP := req.PathParameter("pod-ip")
 	data, err := base64.StdEncoding.DecodeString(encodedadvertisePeerURL)
 	if err != nil {
 		glog.Errorf("failed to decode advertise-peer-url: %s", encodedadvertisePeerURL)
@@ -56,17 +55,7 @@ func (svr *server) newPdHandler(req *restful.Request, resp *restful.Response) {
 	}
 	advertisePeerURL := string(data)
 
-	data, err = base64.StdEncoding.DecodeString(encodePodIP)
-	if err != nil {
-		glog.Errorf("failed to decode podIP: %s", encodePodIP)
-		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {
-			glog.Errorf("failed to writeError: %v", err)
-		}
-		return
-	}
-	podIP := string(data)
-
-	result, err := svr.discovery.Discover(advertisePeerURL, podIP)
+	result, err := svr.discovery.Discover(advertisePeerURL)
 	if err != nil {
 		glog.Errorf("failed to discover: %s, %v", advertisePeerURL, err)
 		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {
@@ -97,7 +86,19 @@ func (svr *server) newStoreHandler(req *restful.Request, resp *restful.Response)
 }
 
 func (svr *server) newProxyHandler(req *restful.Request, resp *restful.Response) {
-	result, err := svr.discovery.GetProxyConfig()
+
+	encodePodIP := req.PathParameter("pod-ip")
+	data, err := base64.StdEncoding.DecodeString(encodePodIP)
+	if err != nil {
+		glog.Errorf("failed to decode podIP: %s", encodePodIP)
+		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {
+			glog.Errorf("failed to writeError: %v", err)
+		}
+		return
+	}
+	podIP := string(data)
+
+	result, err := svr.discovery.GetProxyConfig(podIP)
 	if err != nil {
 		glog.Errorf("failed to get proxy config: %v", err)
 		if err := resp.WriteError(http.StatusInternalServerError, err); err != nil {

@@ -4,6 +4,7 @@ metadata:
   name: "local-storage"
 provisioner: "kubernetes.io/no-provisioner"
 volumeBindingMode: "WaitForFirstConsumer"
+reclaimPolicy: Retain
 
 ---
 apiVersion: v1
@@ -14,7 +15,7 @@ metadata:
 data:
   storageClassMap: |
     local-storage:
-      hostDir: /mnt/disks
+      hostDir:  /var/lib/rancher/k8s-local-storage
       mountDir: /mnt/disks
 
 ---
@@ -70,7 +71,7 @@ spec:
         #     path: /dev
         - name: local-disks
           hostPath:
-            path: /mnt/disks
+            path: /var/lib/rancher/k8s-local-storage
 
 ---
 apiVersion: v1

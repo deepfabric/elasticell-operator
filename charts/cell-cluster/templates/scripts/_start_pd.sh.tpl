@@ -26,14 +26,12 @@ then
 fi
 
 # the general form of variable PEER_SERVICE_NAME is: "<clusterName>-pd"
-cluster_name=`echo ${SERVICE_NAME} | sed 's/-pd//'`
-hostip=`hostname -i | tr "\n" " " | sed "s/ //g"`
-domain="${HOSTNAME}.${SERVICE_NAME}.${NAMESPACE}"
-pd_domain="${SERVICE_NAME}.${NAMESPACE}.svc"
+cluster_name=`echo ${PEER_SERVICE_NAME} | sed 's/-pd-peer//'`
+domain="${HOSTNAME}.${PEER_SERVICE_NAME}.${NAMESPACE}.svc"
 
 discovery_url="${cluster_name}-discovery.${NAMESPACE}.svc:10261"
 encoded_domain_url=`echo ${domain}  | tr "\n" " " | sed "s/ //g" | base64`
-encoded_pod_ip=`echo ${hostip} | tr "\n" " " | sed "s/ //g" | base64`
+
 elapseTime=0
 period=1
 threshold=30
@@ -47,27 +45,28 @@ while true; do
         exit 1
     fi
 
-    if nslookup ${pd_domain} 2>/dev/null
+    if nslookup ${domain} 2>/dev/null
     then
-        echo "nslookup domain ${pd_domain} success"
+        echo "nslookup domain ${domain} success"
         break
     else
-        echo "nslookup domain ${pd_domain} failed" >&2
+        echo "nslookup domain ${domain} failed" >&2
     fi
 
 done
 
-
 ARGS="--data=/var/lib/pd/data \
 -log-level=debug \
 --name=${HOSTNAME} \
---addr-rpc=${hostip}:20800 \
---urls-client=http://${hostip}:2379 \
---urls-peer=http://${hostip}:2380 \
+--addr-rpc=${domain}:20800 \
+--urls-client=http://0.0.0.0:2379 \
+--urls-advertise-client=http://${domain}:2379 \
+--urls-peer=http://0.0.0.0:2380 \
+--urls-advertise-peer=http://${domain}:2380 \
 --initial-cluster=\
 "
 
-until result=$(wget -qO- -T 3 http://${discovery_url}/new/${encoded_domain_url}/${encoded_pod_ip} 2>/dev/null); do
+until result=$(wget -qO- -T 3 http://${discovery_url}/new/${encoded_domain_url} 2>/dev/null); do
     echo "waiting for discovery service returns start args ..."
     sleep $((RANDOM % 5))
 done

@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/listers/apps/v1beta1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/kubernetes/pkg/kubelet/apis"
@@ -91,7 +92,84 @@ func (stmm *storeMemberManager) Sync(cc *v1alpha1.CellCluster) error {
 		return controller.RequeueErrorf("CellCluster: [%s/%s], waiting for PD cluster running", ns, ccName)
 	}
 
+	// Sync Store Headless Service
+	if err := stmm.syncStoreHeadlessServiceForCellCluster(cc); err != nil {
+		return err
+	}
+
 	return stmm.syncStatefulSetForCellCluster(cc)
+}
+
+func (stmm *storeMemberManager) syncStoreHeadlessServiceForCellCluster(cc *v1alpha1.CellCluster) error {
+	ns := cc.GetNamespace()
+	ccName := cc.GetName()
+
+	newSvc := stmm.getNewStoreHeadlessServiceForCellCluster(cc)
+	oldSvc, err := stmm.svcLister.Services(ns).Get(controller.StorePeerName(ccName))
+	if errors.IsNotFound(err) {
+		err = SetServiceLastAppliedConfigAnnotation(newSvc)
+		if err != nil {
+			return err
+		}
+		return stmm.svcControl.CreateService(cc, newSvc)
+	}
+	if err != nil {
+		return err
+	}
+
+	equal, err := serviceEqual(newSvc, oldSvc)
+	if err != nil {
+		return err
+	}
+	if !equal {
+		svc := *oldSvc
+		svc.Spec = newSvc.Spec
+		// TODO add unit test
+		svc.Spec.ClusterIP = oldSvc.Spec.ClusterIP
+		err = SetServiceLastAppliedConfigAnnotation(newSvc)
+		if err != nil {
+			return err
+		}
+		_, err = stmm.svcControl.UpdateService(cc, &svc)
+		return err
+	}
+
+	return nil
+}
+
+func (stmm *storeMemberManager) getNewStoreHeadlessServiceForCellCluster(cc *v1alpha1.CellCluster) *corev1.Service {
+	ns := cc.Namespace
+	ccName := cc.Name
+	svcName := controller.StorePeerName(ccName)
+	instanceName := cc.GetLabels()[label.InstanceLabelKey]
+	storeLabel := label.New().Instance(instanceName).Store().Labels()
+
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            svcName,
+			Namespace:       ns,
+			Labels:          storeLabel,
+			OwnerReferences: []metav1.OwnerReference{controller.GetOwnerRef(cc)},
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: "None",
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "cell-peer",
+					Port:       10800,
+					TargetPort: intstr.FromInt(10800),
+					Protocol:   corev1.ProtocolTCP,
+				},
+				{
+					Name:       "cell-cli",
+					Port:       6370,
+					TargetPort: intstr.FromInt(6370),
+					Protocol:   corev1.ProtocolTCP,
+				},
+			},
+			Selector: storeLabel,
+		},
+	}
 }
 
 func (stmm *storeMemberManager) syncStatefulSetForCellCluster(cc *v1alpha1.CellCluster) error {
@@ -272,6 +350,10 @@ func (stmm *storeMemberManager) getNewSetForCellCluster(cc *v1alpha1.CellCluster
 									},
 								},
 								{
+									Name:  "PEER_SERVICE_NAME",
+									Value: controller.StorePeerName(ccName),
+								},
+								{
 									Name:  "CLUSTER_NAME",
 									Value: ccName,
 								},
@@ -294,6 +376,7 @@ func (stmm *storeMemberManager) getNewSetForCellCluster(cc *v1alpha1.CellCluster
 			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 				stmm.volumeClaimTemplate(q, v1alpha1.StoreMemberType.String(), &storageClassName),
 			},
+			ServiceName:         controller.StorePeerName(ccName),
 			PodManagementPolicy: apps.ParallelPodManagement,
 			UpdateStrategy: apps.StatefulSetUpdateStrategy{
 				Type: apps.RollingUpdateStatefulSetStrategyType,

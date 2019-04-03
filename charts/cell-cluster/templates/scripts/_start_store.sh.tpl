@@ -25,6 +25,31 @@ then
 	tail -f /dev/null
 fi
 
+store_domain="${HOSTNAME}.${PEER_SERVICE_NAME}.${NAMESPACE}.svc"
+elapseTime=0
+period=1
+threshold=30
+while true; do
+    sleep ${period}
+    elapseTime=$(( elapseTime+period ))
+
+    if [[ ${elapseTime} -ge ${threshold} ]]
+    then
+        echo "waiting for pd cluster ready timeout" >&2
+        exit 1
+    fi
+
+    if nslookup ${store_domain} 2>/dev/null
+    then
+        echo "nslookup store_domain ${store_domain} success"
+        break
+    else
+        echo "nslookup store_domain ${store_domain} failed" >&2
+    fi
+
+done
+
+
 discovery_url="${CLUSTER_NAME}-discovery.${NAMESPACE}.svc:10261"
 
 until result=$(wget -qO- -T 3 http://${discovery_url}/store-config 2>/dev/null); do
@@ -32,11 +57,10 @@ until result=$(wget -qO- -T 3 http://${discovery_url}/store-config 2>/dev/null);
     sleep $((RANDOM % 5))
 done
 
-hostip=`hostname -i | tr "\n" " " | sed "s/ //g"`
 ARGS="--data=/var/lib/cell/data \
 -log-level=debug \
---addr=${hostip}:10800 \
---addr-cli=:6370 \
+--addr=${store_domain}:10800 \
+--addr-cli=${store_domain}:6370 \
 --zone=zone-1 --rack=rack-1 \
 --interval-heartbeat-store=5 \
 --interval-heartbeat-cell=2 \

@@ -22,11 +22,13 @@ then
     echo "entering debug mode."
     tail -f /dev/null
 fi
+hostip=`hostname -i | tr "\n" " " | sed "s/ //g"`
+encoded_pod_ip=`echo ${hostip} | tr "\n" " " | sed "s/ //g" | base64`
 
 # the general form of variable PEER_SERVICE_NAME is: "<clusterName>-pd-peer"
 discovery_url="${CLUSTER_NAME}-discovery.${NAMESPACE}.svc:10261"
 
-until result=$(wget -qO- -T 3 http://${discovery_url}/proxy-config 2>/dev/null); do
+until result=$(wget -qO- -T 3 http://${discovery_url}/proxy-config/${encoded_pod_ip} 2>/dev/null); do
     echo "waiting for discovery service returns start args ..."
     sleep $((RANDOM % 5))
 done

@@ -131,6 +131,11 @@ func StoreMemberName(clusterName string) string {
 	return fmt.Sprintf("%s-store", clusterName)
 }
 
+// StorePeerName returns store peer name
+func StorePeerName(clusterName string) string {
+	return fmt.Sprintf("%s-store-peer", clusterName)
+}
+
 // ProxyMemberName returns proxy member name
 func ProxyMemberName(clusterName string) string {
 	return fmt.Sprintf("%s-proxy", clusterName)
