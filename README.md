@@ -9,7 +9,18 @@ Cell Operator manages [elasticell](https://github.com/deepfabric/elasticell) clu
 
 - __Safely scaling the Cell cluster__
 
-    Cell Operator empowers Cell store with horizontal scalability on the cloud.
+    Cell Operator empowers elasticell with horizontal scalability on the cloud.
+    
+    Now cell's scalabily is under some constraints: 
+    
+        1. PD can't scale after cell cluster initialize.
+        2. Store can only scale out but scale in.
+        3. Proxy can scale out or scale in.        
+
+- __Rolling upgrade the Cell cluster__
+
+    You can roll upgrade Pd/Proxy online.
+    You can upgrade Store when there is no IO through put.
 
 - __Kubernetes package manager support__
 
