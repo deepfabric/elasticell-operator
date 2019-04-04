@@ -26,5 +26,6 @@ Cell Operator manages [elasticell](https://github.com/deepfabric/elasticell) clu
 
     By embracing Kubernetes package manager [Helm](https://helm.sh), users can easily deploy Elasticell clusters with only one command.
 
+## Acknowledgments
 
-
+- Thanks [tidb-operator](https://github.com/pingcap/tidb-operator) for providing various member manager method.
