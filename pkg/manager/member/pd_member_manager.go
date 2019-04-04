@@ -192,6 +192,7 @@ func (pdmm *pdMemberManager) syncPDStatefulSetForCellCluster(cc *v1alpha1.CellCl
 
 	if *newPDSet.Spec.Replicas != *oldPDSet.Spec.Replicas {
 		glog.Errorf("failed to sync CellCluster: [%s/%s]'s status, pd doesn't support scale now! ", ns, ccName)
+		return nil
 	}
 
 	// TODO FIXME equal is false every time
@@ -467,13 +468,18 @@ func (pdmm *pdMemberManager) getNewPDSetForCellCluster(cc *v1alpha1.CellCluster)
 							ImagePullPolicy: cc.Spec.PD.ImagePullPolicy,
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "server",
+									Name:          "peer",
 									ContainerPort: int32(2380),
 									Protocol:      corev1.ProtocolTCP,
 								},
 								{
 									Name:          "client",
 									ContainerPort: int32(2379),
+									Protocol:      corev1.ProtocolTCP,
+								},
+								{
+									Name:          "rpc",
+									ContainerPort: int32(20800),
 									Protocol:      corev1.ProtocolTCP,
 								},
 							},

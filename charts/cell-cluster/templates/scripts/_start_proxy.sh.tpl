@@ -32,13 +32,13 @@ until result=$(wget -qO- -T 3 http://${discovery_url}/proxy-config/${encoded_pod
     echo "waiting for discovery service returns start args ..."
     sleep $((RANDOM % 5))
 done
-echo ${result} > /var/lib/redis-proxy/proxy-config.json
+echo ${result} > /var/lib/proxy/proxy-config.json
 
 ARGS="\
 -log-level=debug \
---cfg=/var/lib/redis-proxy/proxy-config.json \
+--cfg=/var/lib/proxy/proxy-config.json \
 "
 
 echo "start cell-proxy ..."
-cat /etc/proxy/proxy-config.json
-exec /usr/local/bin/redis-proxy ${ARGS}
+cat /var/lib/proxy/proxy-config.json
+exec /usr/local/bin/proxy ${ARGS}

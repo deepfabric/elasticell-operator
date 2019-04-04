@@ -23,7 +23,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/listers/apps/v1beta1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 )
@@ -169,28 +168,14 @@ func (pxmm *proxyMemberManager) getNewProxySetForCellCluster(cc *v1alpha1.CellCl
 		ImagePullPolicy: cc.Spec.Proxy.ImagePullPolicy,
 		Ports: []corev1.ContainerPort{
 			{
-				Name:          "server",
-				ContainerPort: int32(4000),
-				Protocol:      corev1.ProtocolTCP,
-			},
-			{
-				Name:          "status", // pprof, status, metrics
-				ContainerPort: int32(10080),
+				Name:          "redis",
+				ContainerPort: int32(6379),
 				Protocol:      corev1.ProtocolTCP,
 			},
 		},
 		VolumeMounts: volMounts,
 		Resources:    util.ResourceRequirement(cc.Spec.Proxy.ContainerSpec),
 		Env:          envs,
-		ReadinessProbe: &corev1.Probe{
-			Handler: corev1.Handler{
-				HTTPGet: &corev1.HTTPGetAction{
-					Path: "/status",
-					Port: intstr.FromInt(10080),
-				},
-			},
-			InitialDelaySeconds: int32(10),
-		},
 	})
 
 	proxyLabel := label.New().Instance(instanceName).Proxy()

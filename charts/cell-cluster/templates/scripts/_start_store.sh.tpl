@@ -57,7 +57,7 @@ until result=$(wget -qO- -T 3 http://${discovery_url}/store-config 2>/dev/null);
     sleep $((RANDOM % 5))
 done
 
-ARGS="--data=/var/lib/cell/data \
+ARGS="--data=/var/lib/store/data \
 -log-level=debug \
 --addr=${store_domain}:10800 \
 --addr-cli=${store_domain}:6370 \

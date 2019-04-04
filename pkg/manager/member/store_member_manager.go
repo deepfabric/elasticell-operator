@@ -223,17 +223,25 @@ func (stmm *storeMemberManager) syncStatefulSetForCellCluster(cc *v1alpha1.CellC
 	}
 
 	if *newSet.Spec.Replicas < *oldSet.Spec.Replicas {
-		if err := stmm.storeScaler.ScaleIn(cc, oldSet, newSet); err != nil {
-			return err
-		}
+		glog.Errorf("cell cluster does not support scale in!")
+		*newSet.Spec.Replicas = *oldSet.Spec.Replicas
+
+		/*
+			if err := stmm.storeScaler.ScaleIn(cc, oldSet, newSet); err != nil {
+				return err
+			}
+		*/
 	}
 
 	if stmm.autoFailover {
-		if cc.StoreAllPodsStarted() && !cc.StoreAllStoresReady() {
-			if err := stmm.storeFailover.Failover(cc); err != nil {
-				return err
+		glog.Errorf("cell cluster does not auto fail over!")
+		/*
+			if cc.StoreAllPodsStarted() && !cc.StoreAllStoresReady() {
+				if err := stmm.storeFailover.Failover(cc); err != nil {
+					return err
+				}
 			}
-		}
+		*/
 	}
 
 	if !statefulSetEqual(*newSet, *oldSet) {
@@ -333,8 +341,13 @@ func (stmm *storeMemberManager) getNewSetForCellCluster(cc *v1alpha1.CellCluster
 							ImagePullPolicy: cc.Spec.Store.ImagePullPolicy,
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "server",
-									ContainerPort: int32(20160),
+									Name:          "store-server",
+									ContainerPort: int32(10800),
+									Protocol:      corev1.ProtocolTCP,
+								},
+								{
+									Name:          "redis-cli",
+									ContainerPort: int32(6370),
 									Protocol:      corev1.ProtocolTCP,
 								},
 							},
@@ -487,7 +500,7 @@ func (stmm *storeMemberManager) getKVStore(store *pdapi.StoreInfo) *v1alpha1.KVS
 	}
 	storeID := fmt.Sprintf("%d", store.Meta.ID)
 	ip := strings.Split(store.Meta.Address, ":")[0]
-	// podName := strings.Split(ip, ".")[0]
+	podName := strings.Split(ip, ".")[0]
 
 	heartBeatTime := time.Time{}
 	if store.Status.LastHeartbeatTS > 0 {
@@ -502,8 +515,8 @@ func (stmm *storeMemberManager) getKVStore(store *pdapi.StoreInfo) *v1alpha1.KVS
 	}
 
 	return &v1alpha1.KVStore{
-		ID: storeID,
-		// PodName:           podName,
+		ID:                storeID,
+		PodName:           podName,
 		IP:                ip,
 		LeaderCount:       int32(store.Status.LeaderCount),
 		State:             state,
