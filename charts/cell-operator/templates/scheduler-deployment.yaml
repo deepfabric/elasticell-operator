@@ -34,6 +34,7 @@ spec:
           - /usr/local/bin/cell-scheduler
           - -v={{ .Values.scheduler.logLevel }}
           - -port=10262
+          - -maxPodsPerNode=2
       - name: kube-scheduler
         image: {{ required "scheduler.kubeSchedulerImage is required! Its verison must be the same as your kubernetes cluster version" .Values.scheduler.kubeSchedulerImage }}
         resources:

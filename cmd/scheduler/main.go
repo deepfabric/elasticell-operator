@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/deepfabric/elasticell-operator/pkg/client/clientset/versioned"
+	predicates "github.com/deepfabric/elasticell-operator/pkg/scheduler/predicates"
 	"github.com/deepfabric/elasticell-operator/pkg/scheduler/server"
 	"github.com/deepfabric/elasticell-operator/version"
 	"github.com/golang/glog"
@@ -31,14 +32,16 @@ import (
 )
 
 var (
-	printVersion bool
-	port         int
+	printVersion       bool
+	port               int
+	maxPodCountPerNode int
 )
 
 func init() {
 	flag.BoolVar(&printVersion, "V", false, "Show version and quit")
 	flag.BoolVar(&printVersion, "version", false, "Show version and quit")
 	flag.IntVar(&port, "port", 10262, "The port that the cell scheduler's http service runs on (default 10262)")
+	flag.IntVar(&maxPodCountPerNode, "maxPodsPerNode", 1, "Max pod numbers in one node each pod type")
 	flag.Parse()
 }
 
@@ -64,6 +67,8 @@ func main() {
 	if err != nil {
 		glog.Fatalf("failed to create Clientset: %v", err)
 	}
+
+	predicates.MaxPodCountPerNode = maxPodCountPerNode
 
 	go wait.Forever(func() {
 		server.StartServer(kubeCli, cli, port)

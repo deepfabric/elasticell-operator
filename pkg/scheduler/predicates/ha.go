@@ -19,14 +19,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/deepfabric/elasticell-operator/pkg/apis/deepfabric.com/v1alpha1"
 	"github.com/deepfabric/elasticell-operator/pkg/client/clientset/versioned"
 	"github.com/deepfabric/elasticell-operator/pkg/label"
+	"github.com/golang/glog"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+)
+
+var (
+	// MaxPodCountPerNode Max pod numbers in one node each pod type
+	MaxPodCountPerNode = 1
 )
 
 type ha struct {
@@ -70,7 +75,7 @@ func (h *ha) Filter(instanceName string, pod *apiv1.Pod, nodes []apiv1.Node) ([]
 	ns := pod.GetNamespace()
 	podName := pod.GetName()
 	component := pod.Labels[label.ComponentLabelKey]
-	ccName := getTCNameFromPod(pod, component)
+	// ccName := getTCNameFromPod(pod, component)
 
 	if len(nodes) == 0 {
 		return nil, fmt.Errorf("kube nodes is empty")
@@ -94,15 +99,18 @@ func (h *ha) Filter(instanceName string, pod *apiv1.Pod, nodes []apiv1.Node) ([]
 	if err != nil {
 		return nil, err
 	}
-	cc, err := h.ccGetFn(ns, ccName)
-	if err != nil {
-		return nil, err
-	}
-	replicas := getReplicasFrom(cc, component)
-
+	/*
+		 cc, err := h.ccGetFn(ns, ccName)
+		if err != nil {
+			return nil, err
+		}
+		replicas := getReplicasFrom(cc, component)
+	*/
 	nodeMap := make(map[string][]string)
-	for _, node := range nodes {
+	nodeList := make([]string, len(nodes))
+	for idx, node := range nodes {
 		nodeMap[node.GetName()] = make([]string, 0)
+		nodeList[idx] = node.GetName()
 	}
 	for _, pod := range podList.Items {
 		pName := pod.GetName()
@@ -119,7 +127,7 @@ func (h *ha) Filter(instanceName string, pod *apiv1.Pod, nodes []apiv1.Node) ([]
 	minNodeNames := make([]string, 0)
 	for nodeName, podNames := range nodeMap {
 		podsCount := len(podNames)
-		if podsCount+1 >= int(replicas+1)/2 {
+		if podsCount >= MaxPodCountPerNode {
 			continue
 		}
 		if min == -1 {
@@ -137,7 +145,7 @@ func (h *ha) Filter(instanceName string, pod *apiv1.Pod, nodes []apiv1.Node) ([]
 	}
 
 	if len(minNodeNames) == 0 {
-		return nil, fmt.Errorf("can't find a node from: %v, nodeMap: %v", nodes, nodeMap)
+		return nil, fmt.Errorf("can't find a node from: %v, nodeMap: %v", nodeList, nodeMap)
 	}
 	return getNodeFromNames(nodes, minNodeNames), nil
 }
